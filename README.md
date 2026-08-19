@@ -4,7 +4,7 @@ Various Maya inspired functions and hotkeys in Blender, with a modeling kit tool
 
 Blender 5.2
 
-<img width="242" height="866" alt="image" src="https://github.com/user-attachments/assets/56be42dd-f6ef-463c-936f-93dcbb27be34" />
+<img width="192" height="900" alt="image" src="https://github.com/user-attachments/assets/ab2c307a-77e2-4595-a4fa-9bcb7874e627" />
 
 ## Install
 
