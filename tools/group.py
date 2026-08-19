@@ -5,6 +5,7 @@ from bpy.types import Operator
 from mathutils import Vector
 
 from . import origin
+from . import settings as mesh_settings
 from .ops_util import keymap_item, ensure_object_mode, select_only
 
 GROUP_PROP = "modtools_group"
@@ -19,7 +20,7 @@ def selection_roots(objects):
     return [obj for obj in objects if obj.parent not in selected]
 
 
-def _world_center(context, objects):
+def _selection_aabb(context, objects):
     depsgraph = context.evaluated_depsgraph_get()
     measurable = [obj for obj in objects if origin.can_edit_origin(obj)]
     if measurable:
@@ -34,12 +35,30 @@ def _world_center(context, objects):
             maxs.x = max(maxs.x, loc.x)
             maxs.y = max(maxs.y, loc.y)
             maxs.z = max(maxs.z, loc.z)
-        return origin.aabb_center(mins, maxs)
+        return mins, maxs
 
-    acc = Vector((0.0, 0.0, 0.0))
-    for obj in objects:
-        acc += obj.matrix_world.translation
-    return acc / len(objects)
+    locs = [obj.matrix_world.translation for obj in objects]
+    mins = Vector((
+        min(loc.x for loc in locs),
+        min(loc.y for loc in locs),
+        min(loc.z for loc in locs),
+    ))
+    maxs = Vector((
+        max(loc.x for loc in locs),
+        max(loc.y for loc in locs),
+        max(loc.z for loc in locs),
+    ))
+    return mins, maxs
+
+
+def _group_location(context, objects, mode):
+    mins, maxs = _selection_aabb(context, objects)
+    center = origin.aabb_center(mins, maxs)
+    if mode == "BOTTOM":
+        return origin.aabb_base(mins, maxs)
+    if mode == "TOP":
+        return Vector((center.x, center.y, maxs.z))
+    return center
 
 
 def _collection_for(obj, context):
@@ -54,23 +73,41 @@ def _parent_keep_world(child, parent):
     child.matrix_world = world
 
 
+def _nearest_group(obj):
+    """The group Empty this object belongs to, itself included."""
+    node = obj
+    while node is not None:
+        if is_group(node):
+            return node
+        node = node.parent
+    return None
+
+
 def _groups_from_selection(objects):
     found = []
     seen = set()
     for obj in objects:
-        group = obj if is_group(obj) else (obj.parent if is_group(obj.parent) else None)
-        if group is not None and group.name not in seen:
-            seen.add(group.name)
+        group = _nearest_group(obj)
+        if group is not None and group not in seen:
+            seen.add(group)
             found.append(group)
     return found
+
+
+def _surviving_parent(group, doomed):
+    """Nearest ancestor that will still exist once `doomed` groups are removed."""
+    parent = group.parent
+    while parent is not None and parent in doomed:
+        parent = parent.parent
+    return parent
 
 
 class MODTOOLS_OT_group(Operator):
     bl_idname = "modtools.group"
     bl_label = "Group"
     bl_description = (
-        "Parent selected objects under a new Empty at the selection center "
-        "(Maya Ctrl+G). Nested selection keeps the existing hierarchy"
+        "Parent selected objects under a new Empty and select it "
+        "(Maya Ctrl+G). Locator position uses the Group dropdown"
     )
     bl_options = {"REGISTER", "UNDO"}
 
@@ -86,9 +123,11 @@ class MODTOOLS_OT_group(Operator):
             self.report({"WARNING"}, "Nothing to group")
             return {"CANCELLED"}
 
+        settings = mesh_settings.get(context)
+        locator = settings.group_locator if settings is not None else "BOTTOM"
         parents = {obj.parent for obj in roots}
         common_parent = parents.pop() if len(parents) == 1 else None
-        center = _world_center(context, roots)
+        location = _group_location(context, roots, locator)
 
         empty = bpy.data.objects.new("group", None)
         empty.empty_display_type = "PLAIN_AXES"
@@ -96,11 +135,13 @@ class MODTOOLS_OT_group(Operator):
         empty.hide_render = True
         empty[GROUP_PROP] = True
         _collection_for(context.view_layer.objects.active, context).objects.link(empty)
+        if empty.name not in context.view_layer.objects:
+            context.scene.collection.objects.link(empty)
 
         if common_parent is not None:
             _parent_keep_world(empty, common_parent)
         mw = empty.matrix_world.copy()
-        mw.translation = center
+        mw.translation = location
         empty.matrix_world = mw
 
         for obj in roots:
@@ -127,15 +168,21 @@ class MODTOOLS_OT_ungroup(Operator):
     def execute(self, context):
         groups = _groups_from_selection(context.selected_objects)
         ensure_object_mode(context)
+
+        doomed = set(groups)
         released = []
         for group in groups:
-            children = list(group.children)
-            grandparent = group.parent
-            for child in children:
-                _parent_keep_world(child, grandparent)
+            parent = _surviving_parent(group, doomed)
+            for child in list(group.children):
+                if child in doomed:
+                    continue
+                _parent_keep_world(child, parent)
                 released.append(child)
+
+        for group in groups:
             bpy.data.objects.remove(group, do_unlink=True)
 
+        released = [obj for obj in released if obj is not None]
         select_only(context, released, active=released[0] if released else None)
         self.report({"INFO"}, f"Ungrouped {len(groups)} group(s)")
         return {"FINISHED"}
@@ -154,6 +201,7 @@ KEYMAP_ITEMS = (
         keymap="Object Mode",
         space_type="EMPTY",
         head=True,
+        section="Group",
     ),
     keymap_item(
         "modtools.ungroup",
@@ -163,6 +211,7 @@ KEYMAP_ITEMS = (
         keymap="Object Mode",
         space_type="EMPTY",
         head=True,
+        section="Group",
     ),
 )
 

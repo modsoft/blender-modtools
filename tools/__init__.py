@@ -1,6 +1,11 @@
-"""Register tool modules here. Copy hello.py as the starting point for a new tool."""
+"""Register tool modules here.
+
+A new tool is a module with `classes`, an optional `KEYMAP_ITEMS`, and
+`register` / `unregister`. Import it, reload it, and add it to MODULES.
+"""
 
 import importlib
+import traceback
 
 from . import origin
 from . import ops_util
@@ -12,7 +17,7 @@ from . import normals
 from . import modifiers
 from . import cleanup
 from . import topology
-from . import hello
+from . import selections
 
 importlib.reload(origin)
 importlib.reload(ops_util)
@@ -24,10 +29,9 @@ importlib.reload(normals)
 importlib.reload(modifiers)
 importlib.reload(cleanup)
 importlib.reload(topology)
-importlib.reload(hello)
+importlib.reload(selections)
 
 MODULES = (
-    hello,
     settings,
     pivot,
     group,
@@ -36,6 +40,7 @@ MODULES = (
     modifiers,
     cleanup,
     topology,
+    selections,
 )
 
 
@@ -51,4 +56,8 @@ def register():
 
 def unregister():
     for mod in reversed(MODULES):
-        mod.unregister()
+        try:
+            mod.unregister()
+        except Exception:
+            # One module failing must not strand the rest as registered.
+            traceback.print_exc()

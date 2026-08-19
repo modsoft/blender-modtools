@@ -3,7 +3,7 @@
 import bpy
 from bpy.types import Operator
 
-from .ops_util import ensure_object_mode, select_only, save_state, restore_state
+from .ops_util import ensure_object_mode, keymap_item, restore_state, save_state
 
 
 class MODTOOLS_OT_apply_all_modifiers(Operator):
@@ -11,6 +11,10 @@ class MODTOOLS_OT_apply_all_modifiers(Operator):
     bl_label = "Apply All Modifiers"
     bl_description = "Apply every modifier on selected objects, top to bottom"
     bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return any(obj.modifiers for obj in context.selected_objects)
 
     def execute(self, context):
         objects = [obj for obj in context.selected_objects if obj.modifiers]
@@ -26,7 +30,6 @@ class MODTOOLS_OT_apply_all_modifiers(Operator):
         for obj in objects:
             if obj.data is not None and obj.data.users > 1:
                 obj.data = obj.data.copy()
-            select_only(context, [obj], active=obj)
             names = [mod.name for mod in obj.modifiers]
             for name in names:
                 try:
@@ -56,10 +59,11 @@ class MODTOOLS_OT_focus_modifiers(Operator):
     bl_description = "Switch the Properties editor to the Modifiers tab"
     bl_options = {"REGISTER"}
 
+    @classmethod
+    def poll(cls, context):
+        return context.object is not None
+
     def execute(self, context):
-        if context.object is None:
-            self.report({"WARNING"}, "No active object")
-            return {"CANCELLED"}
         for area in context.screen.areas:
             if area.type == "PROPERTIES":
                 area.spaces.active.context = "MODIFIER"
@@ -74,7 +78,20 @@ classes = (
     MODTOOLS_OT_focus_modifiers,
 )
 
-KEYMAP_ITEMS = ()
+KEYMAP_ITEMS = (
+    keymap_item(
+        "modtools.apply_all_modifiers",
+        keymap="Object Mode",
+        space_type="EMPTY",
+        section="Modifiers",
+    ),
+    keymap_item(
+        "modtools.focus_modifiers",
+        keymap="Object Mode",
+        space_type="EMPTY",
+        section="Modifiers",
+    ),
+)
 
 
 def register():

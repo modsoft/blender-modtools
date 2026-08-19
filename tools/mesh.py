@@ -4,10 +4,20 @@ import bpy
 from bpy.types import Operator
 
 from .ops_util import (
+    deselect_all_objects,
     selected_meshes,
     ensure_object_mode,
+    keymap_item,
     select_only,
 )
+
+
+def _has_selected_faces(context):
+    """Cheap enough for poll(): total_face_sel is a counter Blender keeps live."""
+    return any(
+        obj.type == "MESH" and obj.data.total_face_sel
+        for obj in context.objects_in_mode
+    )
 
 
 class MODTOOLS_OT_combine(Operator):
@@ -51,32 +61,28 @@ class MODTOOLS_OT_separate(Operator):
         return bool(selected_meshes(context))
 
     def execute(self, context):
-        meshes = selected_meshes(context)
-        was_edit = context.mode == "EDIT_MESH"
         parts = []
-
-        if was_edit:
+        if context.mode == "EDIT_MESH":
             bpy.ops.mesh.separate(type="LOOSE")
             ensure_object_mode(context)
             parts = [obj for obj in context.selected_objects if obj.type == "MESH"]
         else:
+            meshes = selected_meshes(context)
             ensure_object_mode(context)
-            for obj in list(meshes):
-                select_only(context, [obj], active=obj)
+            deselect_all_objects(context)
+            for obj in meshes:
+                obj.select_set(True)
+                context.view_layer.objects.active = obj
                 bpy.ops.object.mode_set(mode="EDIT")
                 bpy.ops.mesh.select_all(action="SELECT")
                 bpy.ops.mesh.separate(type="LOOSE")
                 bpy.ops.object.mode_set(mode="OBJECT")
-                parts.extend(
-                    obj for obj in context.selected_objects if obj.type == "MESH"
-                )
+                for part in list(context.selected_objects):
+                    if part.type == "MESH":
+                        parts.append(part)
+                    part.select_set(False)
 
-        unique = []
-        seen = set()
-        for obj in parts:
-            if obj.name not in seen:
-                seen.add(obj.name)
-                unique.append(obj)
+        unique = list(dict.fromkeys(parts))
         if unique:
             select_only(context, unique, active=unique[0])
 
@@ -94,9 +100,12 @@ class MODTOOLS_OT_extract(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.mode == "EDIT_MESH" and context.object is not None
+        return context.mode == "EDIT_MESH" and _has_selected_faces(context)
 
     def execute(self, context):
+        if not _has_selected_faces(context):
+            self.report({"WARNING"}, "Select faces to extract")
+            return {"CANCELLED"}
         bpy.ops.mesh.separate(type="SELECTED")
         self.report({"INFO"}, "Extracted selection")
         return {"FINISHED"}
@@ -108,7 +117,26 @@ classes = (
     MODTOOLS_OT_extract,
 )
 
-KEYMAP_ITEMS = ()
+KEYMAP_ITEMS = (
+    keymap_item(
+        "modtools.combine",
+        keymap="Object Mode",
+        space_type="EMPTY",
+        section="Mesh",
+    ),
+    keymap_item(
+        "modtools.separate",
+        keymap="Object Mode",
+        space_type="EMPTY",
+        section="Mesh",
+    ),
+    keymap_item(
+        "modtools.extract",
+        keymap="Mesh",
+        space_type="EMPTY",
+        section="Mesh",
+    ),
+)
 
 
 def register():

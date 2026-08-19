@@ -14,6 +14,7 @@ def keymap_item(idname, **kwargs):
         "keymap": "3D View",
         "space_type": "VIEW_3D",
         "head": False,
+        "section": "Tools",
     }
     spec.update(kwargs)
     return spec
@@ -34,14 +35,53 @@ def ensure_object_mode(context):
         bpy.ops.object.mode_set(mode="OBJECT")
 
 
-def select_only(context, objects, active=None):
-    keep = set(objects)
+def prepare_edit(context):
+    """Enter Edit Mode on the meshes an operator should act on.
+
+    Returns (meshes, entered) where `entered` is True when this call switched
+    modes, so the caller can decide whether to switch back with leave_edit().
+    """
+    meshes = edit_meshes(context)
+    if not meshes:
+        return [], False
+    if context.mode == "EDIT_MESH":
+        return meshes, False
+    ensure_object_mode(context)
+    select_only(context, meshes)
+    bpy.ops.object.mode_set(mode="EDIT")
+    return meshes, True
+
+
+def leave_edit(context, entered):
+    if entered and context.mode == "EDIT_MESH":
+        bpy.ops.object.mode_set(mode="OBJECT")
+
+
+def deselect_all_objects(context):
     for obj in context.view_layer.objects:
-        obj.select_set(obj in keep)
-    if active is None and objects:
-        active = objects[0]
+        try:
+            obj.select_set(False)
+        except ReferenceError:
+            continue
+
+
+def select_only(context, objects, active=None):
+    valid = [obj for obj in objects if obj is not None]
+    keep = set(valid)
+    for obj in list(context.view_layer.objects):
+        if obj is None:
+            continue
+        try:
+            obj.select_set(obj in keep)
+        except ReferenceError:
+            continue
+    if active is None and valid:
+        active = valid[0]
     if active is not None:
-        context.view_layer.objects.active = active
+        try:
+            context.view_layer.objects.active = active
+        except (ReferenceError, TypeError):
+            pass
 
 
 def save_state(context):

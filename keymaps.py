@@ -1,24 +1,23 @@
-"""Register add-on keymaps so they show up under Preferences > Keymap > Add-on.
+"""Register add-on keymaps so they show up in ModTools preferences."""
 
-Each tool module can export KEYMAP_ITEMS, a list of dicts:
-
-    {
-        "idname": "modtools.hello",
-        "type": "F5",            # or "NONE" to leave unbound
-        "value": "PRESS",
-        "ctrl": False,
-        "shift": False,
-        "alt": False,
-        "keymap": "3D View",
-        "space_type": "VIEW_3D",
-    }
-"""
+from collections import OrderedDict
 
 import bpy
 
 from . import tools
 
 _addon_keymaps = []
+
+_SECTION_ORDER = (
+    "Group",
+    "Mesh",
+    "Mesh Selections",
+    "Normals",
+    "Modifiers",
+    "Cleanup",
+    "Topology",
+    "Pivot",
+)
 
 
 def register():
@@ -43,11 +42,11 @@ def register():
             alt=spec.get("alt", False),
             head=spec.get("head", False),
         )
-        _addon_keymaps.append((km, kmi))
+        _addon_keymaps.append((km, kmi, spec.get("section", "Tools")))
 
 
 def unregister():
-    for km, kmi in _addon_keymaps:
+    for km, kmi, _section in _addon_keymaps:
         try:
             km.keymap_items.remove(kmi)
         except Exception:
@@ -79,16 +78,34 @@ def draw_preferences(layout, context):
     try:
         from rna_keymap_ui import draw_kmi
     except ImportError:
-        layout.label(text="Right-click a Pivot Tools button → Assign Shortcut.")
+        layout.label(text="Open Preferences → Keymap and search for ModTools.")
         return
 
-    wm = context.window_manager
-    kc = wm.keyconfigs.user or wm.keyconfigs.addon
+    kc = context.window_manager.keyconfigs.user or context.window_manager.keyconfigs.addon
     if kc is None:
         return
 
-    col = layout.column()
-    for km_addon, kmi_addon in _addon_keymaps:
-        km, kmi = _user_item(km_addon, kmi_addon)
-        col.context_pointer_set("keymap", km)
-        draw_kmi([], kc, km, kmi, col, 0)
+    groups = OrderedDict()
+    for km_addon, kmi_addon, section in _addon_keymaps:
+        groups.setdefault(section, []).append((km_addon, kmi_addon))
+
+    for section in _SECTION_ORDER:
+        items = groups.pop(section, None)
+        if not items:
+            continue
+        box = layout.box()
+        box.label(text=section)
+        col = box.column()
+        for km_addon, kmi_addon in items:
+            km, kmi = _user_item(km_addon, kmi_addon)
+            col.context_pointer_set("keymap", km)
+            draw_kmi([], kc, km, kmi, col, 0)
+
+    for section, items in groups.items():
+        box = layout.box()
+        box.label(text=section)
+        col = box.column()
+        for km_addon, kmi_addon in items:
+            km, kmi = _user_item(km_addon, kmi_addon)
+            col.context_pointer_set("keymap", km)
+            draw_kmi([], kc, km, kmi, col, 0)

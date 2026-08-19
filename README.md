@@ -20,17 +20,28 @@ git clone https://github.com/modsoft/blender-modtools.git modtools
 
 N-panel → ModTools.
 
-- **Group / Ungroup** — Ctrl+G / Ctrl+Shift+G (Object Mode)
+- **Group / Ungroup** — Ctrl+G / Ctrl+Shift+G. Edit Locator moves a group's Empty without dragging its contents along.
 - **Mesh** — Combine, Separate, Extract
+- **Mesh Selections** — Smart Pattern Select, grow/shrink, loops and rings, skip loop/ring, random, face angle, same shader or name
 - **Normals** — Soften/Harden Edge, Smooth by Angle, Unlock, Reverse, Recalculate
 - **Modifiers** — Apply All, Focus Stack
-- **Cleanup** — select or fix n-gons, non-manifold, loose, zero-area, and related issues
-- **Topology** — Select Planar Edges, then dissolve (Ctrl+X) to un-triangulate. Quadrangulate joins tris into quads.
+- **Cleanup** — select or fix n-gons, non-manifold, loose geometry, zero-area faces and the rest. Works on a component selection, or the whole mesh if nothing is selected.
+- **Topology** — Select Planar Edges, then dissolve with Ctrl+X to un-triangulate. Quadrangulate joins tris back into quads.
 - **Pivot** — zero local values, snap origin to base/center/world, align to bounding box
 
-Right-click a button to assign a shortcut.
+Buttons grey out when they don't apply. Hover to see why.
+
+Shortcuts are assigned in **Edit → Preferences → Add-ons → ModTools**, grouped by section.
+
+## Smart Pattern Select
+
+Pick two edges on the same loop or ring, press the button, and the spacing between them repeats along the whole run. Selecting every third edge is two clicks instead of counting your way around.
 
 ## Changelog
+
+### v0.2.0
+
+Mesh Selections section, including Smart Pattern Select. Topology section with Select Planar Edges and Quadrangulate. Cleanup respects a component selection. Buttons grey out based on context instead of failing when pressed. Settings save with the .blend.
 
 ### v0.1.0
 
