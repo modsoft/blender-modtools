@@ -39,6 +39,10 @@ Pick two edges on the same loop or ring, press the button, and the spacing betwe
 
 ## Changelog
 
+### v0.2.2
+
+Website link in the add-on info, and a shorter tagline so the extension manifest validates.
+
 ### v0.2.1
 
 Check for Updates in the add-on preferences. It reports what's published and links to the repo, it doesn't download anything.

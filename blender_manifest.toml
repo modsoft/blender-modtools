@@ -1,12 +1,13 @@
 schema_version = "1.0.0"
 
 id = "modtools"
-version = "0.2.1"
+version = "0.2.2"
 name = "ModTools"
-tagline = "Various Maya inspired functions and hotkeys in Blender, with a modeling kit toolbar"
+tagline = "Maya inspired functions and hotkeys, with a modeling kit toolbar"
 maintainer = "Trey"
 type = "add-on"
 tags = ["3D View"]
+website = "https://github.com/modsoft/blender-modtools"
 
 blender_version_min = "5.2.0"
 

@@ -10,9 +10,10 @@
 bl_info = {
     "name": "ModTools",
     "author": "Trey",
-    "version": (0, 2, 1),
+    "version": (0, 2, 2),
     "blender": (5, 2, 0),
     "location": "3D Viewport > Sidebar > ModTools",
+    "doc_url": "https://github.com/modsoft/blender-modtools",
     "description": "Various Maya inspired functions and hotkeys in Blender, with a modeling kit toolbar",
     "category": "3D View",
 }
