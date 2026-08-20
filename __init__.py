@@ -10,7 +10,7 @@
 bl_info = {
     "name": "ModTools",
     "author": "Trey",
-    "version": (0, 2, 0),
+    "version": (0, 2, 1),
     "blender": (5, 2, 0),
     "location": "3D Viewport > Sidebar > ModTools",
     "description": "Various Maya inspired functions and hotkeys in Blender, with a modeling kit toolbar",
@@ -21,6 +21,7 @@ import importlib
 import os
 import re
 
+from . import update
 from . import prefs
 from . import tools
 from . import ui
@@ -31,6 +32,7 @@ from . import keymaps
 DEV_RELOAD = True
 
 _modules = (
+    update,
     prefs,
     tools,
     ui,

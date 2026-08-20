@@ -7,6 +7,12 @@ class ModToolsPreferences(AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
+
+        from . import update
+
+        update.draw(layout)
+        layout.separator()
+
         layout.label(text="Assign shortcuts here. Panel buttons stay grey when they don't apply.")
         layout.label(text="Group is Ctrl+G, Ungroup is Ctrl+Shift+G (Object Mode).")
         layout.separator()

@@ -39,6 +39,10 @@ Pick two edges on the same loop or ring, press the button, and the spacing betwe
 
 ## Changelog
 
+### v0.2.1
+
+Check for Updates in the add-on preferences. It reports what's published and links to the repo, it doesn't download anything.
+
 ### v0.2.0
 
 Mesh Selections section, including Smart Pattern Select. Topology section with Select Planar Edges and Quadrangulate. Cleanup respects a component selection. Buttons grey out based on context instead of failing when pressed. Settings save with the .blend.
