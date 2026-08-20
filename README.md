@@ -39,6 +39,10 @@ Pick two edges on the same loop or ring, press the button, and the spacing betwe
 
 ## Changelog
 
+### v0.2.3
+
+Fix the add-on failing to load when installed as an extension. Blender strips `bl_info` from extensions, and the version cross-check read it directly.
+
 ### v0.2.2
 
 Website link in the add-on info, and a shorter tagline so the extension manifest validates.

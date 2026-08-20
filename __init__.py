@@ -10,7 +10,7 @@
 bl_info = {
     "name": "ModTools",
     "author": "Trey",
-    "version": (0, 2, 2),
+    "version": (0, 2, 3),
     "blender": (5, 2, 0),
     "location": "3D Viewport > Sidebar > ModTools",
     "doc_url": "https://github.com/modsoft/blender-modtools",
@@ -47,7 +47,16 @@ def _reload():
 
 
 def _check_manifest_version():
-    """bl_info and blender_manifest.toml carry the version separately."""
+    """bl_info and blender_manifest.toml carry the version separately.
+
+    Extension installs strip bl_info and read the manifest alone, so there is
+    nothing to cross-check. Reading the name directly would raise there and take
+    the whole add-on down with it.
+    """
+    info = globals().get("bl_info")
+    if not info:
+        return
+
     path = os.path.join(os.path.dirname(__file__), "blender_manifest.toml")
     try:
         with open(path, "r", encoding="utf-8") as handle:
@@ -56,8 +65,8 @@ def _check_manifest_version():
         return
 
     for key, expected in (
-        ("version", ".".join(str(part) for part in bl_info["version"])),
-        ("blender_version_min", ".".join(str(part) for part in bl_info["blender"])),
+        ("version", ".".join(str(part) for part in info["version"])),
+        ("blender_version_min", ".".join(str(part) for part in info["blender"])),
     ):
         match = re.search(rf'^{key}\s*=\s*"([^"]+)"', text, re.MULTILINE)
         if match and match.group(1) != expected:
