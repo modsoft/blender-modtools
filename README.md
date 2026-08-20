@@ -41,19 +41,20 @@ Pick two edges on the same loop or ring, press the button, and the spacing betwe
 
 ### v0.2.3
 
-Fix the add-on failing to load when installed as an extension. Blender strips `bl_info` from extensions, and the version cross-check read it directly.
+Hot-fix for some installation paths
 
 ### v0.2.2
 
-Website link in the add-on info, and a shorter tagline so the extension manifest validates.
-
-### v0.2.1
-
-Check for Updates in the add-on preferences. It reports what's published and links to the repo, it doesn't download anything.
+Check for Updates in the add-on preferences. 
+UI refactor
 
 ### v0.2.0
 
-Mesh Selections section, including Smart Pattern Select. Topology section with Select Planar Edges and Quadrangulate. Cleanup respects a component selection. Buttons grey out based on context instead of failing when pressed. Settings save with the .blend.
+Mesh Selections section, including Smart Pattern Select.
+Topology section with Select Planar Edges and Quadrangulate.
+Cleanup respects a component selection.
+Buttons grey out based on context.
+Settings saved in the .blend.
 
 ### v0.1.0
 
