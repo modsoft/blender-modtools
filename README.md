@@ -29,13 +29,13 @@ N-panel → ModTools.
 - **Topology** — Select Planar Edges, then dissolve with Ctrl+X to un-triangulate. Quadrangulate joins tris back into quads.
 - **Pivot** — zero local values, snap origin to base/center/world, align to bounding box
 
-Buttons grey out when they don't apply. Hover to see why.
+Buttons are active based on context.
 
 Shortcuts are assigned in **Edit → Preferences → Add-ons → ModTools**, grouped by section.
 
 ## Smart Pattern Select
 
-Pick two edges on the same loop or ring, press the button, and the spacing between them repeats along the whole run. Selecting every third edge is two clicks instead of counting your way around.
+Pick two edges on the same loop or ring, press the button, and the spacing between them repeats along the whole run.
 
 ## Changelog
 
